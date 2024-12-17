@@ -39,6 +39,7 @@ public:
     void SetOpennerFile(opener_file<searcher> func);
     void PrintU16InConsole(const WCHAR* c, DWORD len = 1);
     void PrintU16InConsole(const std::u16string& w_str);
+    void PrintU16InConsole(const fs::path& path);
 
 private:
     void Key(INPUT_RECORD& input_event, DWORD& read_num);
@@ -418,6 +419,15 @@ inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const WCHAR* in_char,
 template <typename searcher>
 inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const std::u16string& u16str) {
     PrintU16InConsole(reinterpret_cast<const WCHAR*> (u16str.c_str()), static_cast<DWORD>(u16str.size()));
+}
+
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const fs::path& path) {
+    PrintU16InConsole(path.filename().u16string());
+    PrintU16InConsole(std::u16string(u"\t\t:\t\t..."));
+    std::wstring last_str = path.wstring();
+    size_t file_name_size = path.filename().wstring().size();
+    PrintU16InConsole(last_str.c_str() + last_str.size() - 60 - file_name_size - 1, 60);
 }
 
 template <typename searcher>

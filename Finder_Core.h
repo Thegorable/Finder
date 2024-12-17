@@ -28,11 +28,10 @@ struct file {
     operator std::string() const;
 
     const fs::path full_path_;
-    const std::u16string ui_format_16_str;
-    const std::size_t path_size_;
+    //const std::u16string ui_format_16_str;
 };
 
-typedef std::map<const std::u16string*, const std::u16string*> format_file_map;
+typedef std::map<const std::u16string*, const fs::path*> format_file_map;
 typedef std::unordered_map<std::u16string, file> files_map;
 
 enum class FinderWarning {path_limit, paths_noexists, open_noexists_path, open_noexists_file_name, no_warnings};
@@ -98,8 +97,11 @@ private:
 
 class Finder {
 public:
+    Finder();
+
     void FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w);
     void FindAllFilesViaPath(const fs::path& input_path);
+    format_file_map FindFilesBySubstring(const std::u16string& str, size_t count) const;
     format_file_map FindFilesBySubstring(const std::u16string& str) const;
     inline size_t files_count() const noexcept { return files.size(); }
     std::u16string GetWarning(FinderWarning w) const;
@@ -109,6 +111,7 @@ public:
     void OpenDirectoryViaFileName(const std::u16string& file_name) const;
 
 private:  
+    fs::path base_path_;
     files_map files;
     //PathsMap files;
     std::vector<fs::path> not_used_paths_;

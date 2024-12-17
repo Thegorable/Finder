@@ -16,7 +16,7 @@ void RunFinder() {
     ConsoleSearcherUI<Finder> ui(finder, Language::RU);
 
     refresher<Finder> f_refresher = [](const Finder& f, const u16string& str)
-        {return f.FindFilesBySubstring(str); };
+        {return f.FindFilesBySubstring(str, 30); };
     ui.SetRefresherFoundList(f_refresher);
 
     opener_file<Finder> f_opener = [](const Finder& f, const u16string& str)
@@ -51,10 +51,9 @@ int main() {
         //RunFinder();
 #ifdef _PROFILE
         Finder finder;
-        //
         Profiler profiler;
         finder.FindAllFilesViaPath(BENCHMARK_TEST_PATH_MAX);
-        profiler.PrintResults<std::chrono::milliseconds>("BENCHMARK Low FindAllFilesViaPath: ");
+        profiler.PrintResults<std::chrono::milliseconds>("BENCHMARK test FindAllFilesViaPath: ");
         system("pause");
 #endif // _PROFILE
 
