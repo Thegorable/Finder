@@ -44,6 +44,18 @@ file::file(const fs::path& path) : full_path_(path),
 ui_format_16_str (ConvertPathToUiU16(path, 30, 60)),
 path_size_ (path.native().length()) {}
 
+fs::path file::parent_path() const {
+    return full_path_.parent_path();
+}
+
+file::operator std::u16string() const {
+    return full_path_.u16string();
+}
+
+file::operator std::string() const {
+    return full_path_.string();
+}
+
 
 void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
 
@@ -59,7 +71,7 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
         return;
     }
 
-#ifdef _PROFILER
+#ifdef _PROFILE
     for (const auto& dir : fs::directory_iterator(input_path)) {
         if (dir.is_directory()) {
             FindAllFilesViaPath(dir.path(), w);
@@ -67,23 +79,23 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
             total_dir_str_weight += MeasurePathMemory(dir.path().filename());
         }
         else {
-            files.insert(dir.path());
+            files.insert({ dir.path().filename().u16string(),  dir.path() });
             total_files_weight += MeasurePathMemory(dir.path().filename());
             total_paths_weight += MeasurePathMemory(dir.path());
         }
     }
 #endif
-#ifndef _PROFILER
-    //for (const auto& dir : fs::directory_iterator(input_path)) {
-    //    dir.is_directory() ? FindAllFilesViaPath(dir.path(), w) : 
-    //        (void)files.insert( { dir.path().filename().u16string(),  dir.path()});
-    //}
-
+#ifndef _PROFILE
     for (const auto& dir : fs::directory_iterator(input_path)) {
-        dir.is_directory() ? 
-            FindAllFilesViaPath(dir.path(), w) :
-            files.insert(dir.path());
+        dir.is_directory() ? FindAllFilesViaPath(dir.path(), w) : 
+            (void)files.insert( { dir.path().filename().u16string(),  dir.path()});
     }
+
+    //for (const auto& dir : fs::directory_iterator(input_path)) {
+    //    dir.is_directory() ? 
+    //        FindAllFilesViaPath(dir.path(), w) :
+    //        files.insert(dir.path());
+    //}
 #endif
 }
 
@@ -94,9 +106,9 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path) {
 
 format_file_map Finder::FindFilesBySubstring(const std::u16string& substring) const {
     format_file_map found_files;
-    for (const u16string& f : files) {
-        if (f.find(substring) != f.npos) {
-            found_files[&f] = move(ConvertPathToUiU16(files.at(f), 30, 60));
+    for (const auto& f : files) {
+        if (f.first.find(substring) != f.first.npos) {
+            found_files[&f.first] = &f.second.ui_format_16_str;
         }
     }
     return found_files;

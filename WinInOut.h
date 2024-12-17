@@ -462,7 +462,7 @@ inline void ConsoleSearcherUI<searcher>::ReprintFoundList() {
     
     for (const auto& path_str : found_list_) {
         SetCursorYPosition(FOUND_LIST_Y_POS_ + (raw++));
-        PrintU16InConsole(path_str.second);
+        PrintU16InConsole(*path_str.second);
         num++;
         if (num >= max_found_list_size_) {
             break;

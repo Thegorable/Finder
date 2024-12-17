@@ -23,12 +23,16 @@ std::u16string ConvertPathToUiU16(const fs::path& path, int file_max_len, int pa
 struct file {
     file(const fs::path& path);
 
+    fs::path parent_path() const;
+    operator std::u16string() const;
+    operator std::string() const;
+
     const fs::path full_path_;
     const std::u16string ui_format_16_str;
     const std::size_t path_size_;
 };
 
-typedef std::map<const std::u16string*, std::u16string> format_file_map;
+typedef std::map<const std::u16string*, const std::u16string*> format_file_map;
 typedef std::unordered_map<std::u16string, file> files_map;
 
 enum class FinderWarning {path_limit, paths_noexists, open_noexists_path, open_noexists_file_name, no_warnings};
@@ -105,8 +109,8 @@ public:
     void OpenDirectoryViaFileName(const std::u16string& file_name) const;
 
 private:  
-    //files_map files;
-    PathsMap files;
+    files_map files;
+    //PathsMap files;
     std::vector<fs::path> not_used_paths_;
     std::vector<fs::path> not_existing_paths_;
 

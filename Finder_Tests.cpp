@@ -120,7 +120,7 @@ void TestDataSize(fs::path path) {
         << " = " << finder.total_dir_str_weight / 1024 / 1024 << " mb " << '\n';
 
     for (const auto& f : finder.files) {
-        total_full_path_w += MeasurePathMemory(finder.files.at(f));
+        total_full_path_w += MeasurePathMemory(finder.files.at(f.first).full_path_);
     }
 
     cout << "Total insered full paths weight:\t" << total_full_path_w << " bytes"
@@ -212,8 +212,6 @@ void TestSimpleRusFindAllFilesViaPath() {
 void TestHardFindAllFilesViaPath() {
     Finder finder;
     finder.FindAllFilesViaPath(HARD_TEST_PATH);
-
-    fs::path path_test = finder.files.at(u"file_686_2.txt");
 
     assert(finder.isFileExist(u"file_008_133.txt"));
     assert(finder.IsFilePath(u"file_008_133.txt",

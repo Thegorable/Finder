@@ -32,29 +32,29 @@ int main() {
 #ifdef _DEBUG
         //TestPathsMapInsert();
         //TestPathsMapAt();
-        //TestSimpleFindAllFilesViaPath();
-        //TestHardFindAllFilesViaPath();
-        //TestSimpleRusFindAllFilesViaPath();
+        TestSimpleFindAllFilesViaPath();
+        TestHardFindAllFilesViaPath();
+        TestSimpleRusFindAllFilesViaPath();
         //Test_Copy_FindAllFilesViaPath();
 
-        TestDataSize(BENCHMARK_TEST_PATH_LOW);
+        //TestDataSize(BENCHMARK_TEST_PATH_LOW);
 
         //Profile_FindAllFilesViaPath(BENCHMARK_TEST_PATH_LOW);
         
-        //FindFilesViaConsoleTest(HARD_TEST_PATH);
+        FindFilesViaConsoleTest(HARD_TEST_PATH);
         //TestOpenDirectory();
         //TestOpenDirectoryViaFileName();
 
 #endif
 
 #ifndef _DEBUG
-        RunFinder();
+        //RunFinder();
 #ifdef _PROFILE
-        //Finder finder;
+        Finder finder;
         //
-        //Profiler profiler;
-        //finder.FindAllFilesViaPath(BENCHMARK_TEST_PATH_MID);
-        //profiler.PrintResults<std::chrono::milliseconds>("BENCHMARK Low FindAllFilesViaPath: ");
+        Profiler profiler;
+        finder.FindAllFilesViaPath(BENCHMARK_TEST_PATH_MAX);
+        profiler.PrintResults<std::chrono::milliseconds>("BENCHMARK Low FindAllFilesViaPath: ");
         system("pause");
 #endif // _PROFILE
 
