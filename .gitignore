@@ -9,6 +9,13 @@
 *.user
 *.userosscache
 *.sln.docstates
+findCopyFiles_test
+findFiles_Benchmark_test_low
+findFiles_Benchmark_test_max
+findFiles_Benchmark_test_mid
+findFiles_test
+hard_findFiles_test
+rus_findFiles_test
 
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs

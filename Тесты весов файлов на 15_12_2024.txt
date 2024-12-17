@@ -1,0 +1,45 @@
+Тесты весов файлов на данный момент:
+
+Тест с низким бенчмарком:
+
+Inserted files: 7738
+Not inserted files: 25339
+Not used files: 0
+Not existing files: 0
+Total folders: 1364
+
+Origin inserted files total weight:     541660 bytes = 528 kb  = 0 mb
+Origin all files total weight:          2315390 bytes = 2261 kb  = 2 mb
+Origin all folders total weight:        95480 bytes = 93 kb  = 0 mb
+Total insered full paths weight:        2337692 bytes = 2282 kb  = 2 mb
+Total full paths weight:                13422084 bytes = 13107 kb  = 12 mb
+
+Тест со средним бенчмарком:
+
+Inserted files: 266283
+Not inserted files: 66533
+Not used files: 0
+Not existing files: 0
+Total folders: 1364
+
+Origin inserted files total weight:     22468146 bytes = 21941 kb  = 21 mb
+Origin all files total weight:          28082032 bytes = 27423 kb  = 26 mb
+Origin all folders total weight:        95480 bytes = 93 kb  = 0 mb
+Total insered full paths weight:        84958562 bytes = 82967 kb  = 81 mb
+Total full paths weight:                135051072 bytes = 131885 kb  = 128 mb
+
+Тест с максимальным бенчмарком:
+
+Inserted files: 3593019
+Not inserted files: 9376
+Not used files: 0
+Not existing files: 0
+Total folders: 1243
+
+Origin inserted files total weight:     308999634 bytes = 301757 kb  = 294 mb - 86 байт сердний размер объекта path (где 40 байт - сам контейнер)
+Origin all files total weight:          309805970 bytes = 302544 kb  = 295 mb
+Origin all folders total weight:        87010 bytes = 84 kb  = 0 mb
+Total insered full paths weight:        1246957506 bytes = 1217731 kb  = 1189 mb
+Total full paths weight:                1546029300 bytes = 1509794 kb  = 1474 mb
+
+RAM заняло около 4 гб
