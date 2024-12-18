@@ -32,6 +32,31 @@ u16string ConvertPathToUiU16(const fs::path& path, int file_max_len, int path_ma
     return format_str;
 }
 
+wchar_t* GetNativePathFileWStr(const fs::path& path) {
+    wchar_t* wchar_ptr = const_cast<wchar_t*>(path.c_str() + path.native().size());
+    while (*wchar_ptr != L'\\' && *wchar_ptr != L'/') {
+        wchar_ptr--;
+    }
+
+    return wchar_ptr;
+}
+
+char16_t* GetNativePathFileU16Str(const fs::path& path) {
+    return reinterpret_cast<char16_t*>(GetNativePathFileWStr(path));
+}
+
+const char16_t* GetNativeDirsToFileU16Str(const fs::path& path) {
+    const char16_t* str_ptr = reinterpret_cast<const char16_t*>(path.c_str());
+    char16_t* str_ptr_end = const_cast<char16_t*>(str_ptr + path.native().size());
+    while (*str_ptr_end != L'\\' && *str_ptr_end != L'/') {
+        str_ptr_end--;
+    }
+
+    *str_ptr_end = L'\0';
+
+    return str_ptr;
+}
+
 fs::path operator ""_p(const char* c, size_t s) {
     return fs::path(c);
 }
@@ -41,6 +66,10 @@ fs::path operator ""_p(const char8_t* c, size_t s) {
 }
 
 file::file(const fs::path& path) : full_path_(path) {}
+file::file(const std::u16string& path) : full_path_(path) {}
+file::file(const std::wstring& path) : full_path_(path) {}
+file::file(const char16_t* path) : full_path_(path) {}
+file::file(const wchar_t* path) : full_path_(path) {}
 //ui_format_16_str (ConvertPathToUiU16(path, 30, 60)) {}
 //ui_format_16_str(u"GG\t\t...\t\tGG") {}
 
@@ -57,7 +86,9 @@ file::operator std::string() const {
 }
 
 
-Finder::Finder() : base_path_(fs::current_path()) {}
+Finder::Finder() : base_path_(fs::current_path()) {
+    files.reserve(4'000'000);
+}
 
 void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
 
@@ -90,7 +121,7 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
 #ifndef _PROFILER
     for (const auto& dir : fs::directory_iterator(input_path)) {
         dir.is_directory() ? FindAllFilesViaPath(dir.path(), w) : 
-            (void)files.insert({ dir.path().filename().u16string(),  dir.path() });
+            (void)files.insert({ dir.path().filename().u16string(),  dir.path()});
     }
 
     //for (const auto& dir : fs::directory_iterator(input_path)) {

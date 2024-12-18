@@ -32,16 +32,16 @@ int main() {
 #ifdef _DEBUG
         //TestPathsMapInsert();
         //TestPathsMapAt();
-        TestSimpleFindAllFilesViaPath();
-        TestHardFindAllFilesViaPath();
-        TestSimpleRusFindAllFilesViaPath();
+        //TestSimpleFindAllFilesViaPath();
+        //TestHardFindAllFilesViaPath();
+        //TestSimpleRusFindAllFilesViaPath();
         //Test_Copy_FindAllFilesViaPath();
 
         //TestDataSize(BENCHMARK_TEST_PATH_LOW);
 
         //Profile_FindAllFilesViaPath(BENCHMARK_TEST_PATH_LOW);
         
-        FindFilesViaConsoleTest(HARD_TEST_PATH);
+        //FindFilesViaConsoleTest(HARD_TEST_PATH);
         //TestOpenDirectory();
         //TestOpenDirectoryViaFileName();
 

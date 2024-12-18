@@ -119,9 +119,9 @@ void TestDataSize(fs::path path) {
         << " = " << finder.total_dir_str_weight / 1024 << " kb "
         << " = " << finder.total_dir_str_weight / 1024 / 1024 << " mb " << '\n';
 
-    for (const auto& f : finder.files) {
-        total_full_path_w += MeasurePathMemory(finder.files.at(f.first).full_path_);
-    }
+    //for (const auto& f : finder.files) {
+    //    total_full_path_w += MeasurePathMemory(finder.files.at(f.first).full_path_);
+    //}
 
     cout << "Total insered full paths weight:\t" << total_full_path_w << " bytes"
         << " = " << total_full_path_w / 1024 << " kb "

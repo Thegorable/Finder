@@ -19,9 +19,16 @@ fs::path operator ""_p(const char* c, size_t s);
 fs::path operator ""_p(const char8_t* c, size_t s);
 
 std::u16string ConvertPathToUiU16(const fs::path& path, int file_max_len, int path_max_len);
+wchar_t* GetNativePathFileWStr(const fs::path& path);
+char16_t* GetNativePathFileU16Str(const fs::path& path);
+const char16_t* GetNativeDirsToFileU16Str(const fs::path& path);
 
 struct file {
     file(const fs::path& path);
+    file(const std::u16string& path);
+    file(const std::wstring& path);
+    file(const char16_t* path);
+    file(const wchar_t* path);
 
     fs::path parent_path() const;
     operator std::u16string() const;
