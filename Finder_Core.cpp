@@ -65,29 +65,35 @@ fs::path operator ""_p(const char8_t* c, size_t s) {
     return fs::path(c);
 }
 
-file::file(const fs::path& path) : full_path_(path) {}
-file::file(const std::u16string& path) : full_path_(path) {}
-file::file(const std::wstring& path) : full_path_(path) {}
-file::file(const char16_t* path) : full_path_(path) {}
-file::file(const wchar_t* path) : full_path_(path) {}
-//ui_format_16_str (ConvertPathToUiU16(path, 30, 60)) {}
-//ui_format_16_str(u"GG\t\t...\t\tGG") {}
+file::file(const fs::path& path) : full_path_(0) {}
+file::file(const std::u16string& path) : full_path_(0) {}
+file::file(const std::wstring& path) : full_path_(0) {}
+file::file(const char16_t* path) : full_path_(0) {}
+file::file(const wchar_t* path) : full_path_(0) {}
+
+file::file(uint16_t id) : full_path_(id) {}
 
 fs::path file::parent_path() const {
-    return full_path_.parent_path();
+    return {};
+}
+
+const fs::path& file::path() const {
+    return {};
 }
 
 file::operator std::u16string() const {
-    return full_path_.u16string();
+    return {};
 }
 
 file::operator std::string() const {
-    return full_path_.string();
+    return {};
 }
 
 
 Finder::Finder() : base_path_(fs::current_path()) {
     files.reserve(4'000'000);
+    file_names_.reserve(4'000'000);
+    paths_.reserve(1'500);
 }
 
 void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
@@ -118,17 +124,24 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
         }
     }
 #endif
+//#ifndef _PROFILER
+//    for (const auto& dir : fs::directory_iterator(input_path)) {
+//        dir.is_directory() ? FindAllFilesViaPath(dir.path(), w) : 
+//            (void)files.insert({ dir.path().filename().u16string(), 50u});
+//    }
+//#endif
+
 #ifndef _PROFILER
     for (const auto& dir : fs::directory_iterator(input_path)) {
-        dir.is_directory() ? FindAllFilesViaPath(dir.path(), w) : 
-            (void)files.insert({ dir.path().filename().u16string(),  dir.path()});
+        if (dir.is_directory()) {
+            paths_.push_back(dir.path().parent_path());
+            FindAllFilesViaPath(dir.path(), w);
+            continue;
+        }
+        file_names_.push_back(dir.path().filename().u16string());
+        files.insert({ static_cast<uint16_t>(file_names_.size() - 1),
+        static_cast<uint16_t>(paths_.size() - 1) });
     }
-
-    //for (const auto& dir : fs::directory_iterator(input_path)) {
-    //    dir.is_directory() ? 
-    //        FindAllFilesViaPath(dir.path(), w) :
-    //        files.insert(dir.path());
-    //}
 #endif
 }
 
@@ -139,15 +152,15 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path) {
 
 format_file_map Finder::FindFilesBySubstring(const std::u16string& substring, size_t count) const {
     format_file_map found_files;
-    size_t id = 0;
-    for (const auto& f : files) {
-        if (f.first.find(substring) != f.first.npos) {
-            found_files[&f.first] = &f.second.full_path_;
-            id++;
-        }
-        if (id >= count) { break; }
-    }
-    return found_files;
+    //size_t id = 0;
+    //for (const auto& f : files) {
+    //    if (f.first.find(substring) != f.first.npos) {
+    //        found_files[&f.first] = &f.second.path();
+    //        id++;
+    //    }
+    //    if (id >= count) { break; }
+    //}
+    //return found_files;
 }
 
 format_file_map Finder::FindFilesBySubstring(const std::u16string& substring) const {
@@ -219,10 +232,10 @@ void Finder::OpenDirectory(const fs::path& path, FinderWarning& w) const {
 }
 
 void Finder::OpenDirectoryViaFileName(const std::u16string& file_name, FinderWarning& w) const {
-    if (files.count(file_name)) {
-        OpenDirectory(files.at(file_name).parent_path(), w);
-        return;
-    }
+    //if (files.count(file_name)) {
+    //    OpenDirectory(files.at(file_name).parent_path(), w);
+    //    return;
+    //}
 
     w = FinderWarning::open_noexists_file_name;
 }

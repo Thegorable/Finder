@@ -23,23 +23,40 @@ wchar_t* GetNativePathFileWStr(const fs::path& path);
 char16_t* GetNativePathFileU16Str(const fs::path& path);
 const char16_t* GetNativeDirsToFileU16Str(const fs::path& path);
 
+//struct file {
+//    file(const fs::path& path);
+//    file(const std::u16string& path);
+//    file(const std::wstring& path);
+//    file(const char16_t* path);
+//    file(const wchar_t* path);
+//
+//    fs::path parent_path() const;
+//    operator std::u16string() const;
+//    operator std::string() const;
+//
+//    const fs::path full_path_;
+//};
+
 struct file {
     file(const fs::path& path);
     file(const std::u16string& path);
     file(const std::wstring& path);
     file(const char16_t* path);
     file(const wchar_t* path);
+    file(uint16_t id);
 
     fs::path parent_path() const;
+    const fs::path& path() const;
     operator std::u16string() const;
     operator std::string() const;
 
-    const fs::path full_path_;
-    //const std::u16string ui_format_16_str;
+private:
+    uint16_t full_path_;
 };
 
 typedef std::map<const std::u16string*, const fs::path*> format_file_map;
-typedef std::unordered_map<std::u16string, file> files_map;
+//typedef std::unordered_map<std::u16string, file> files_map;
+typedef std::unordered_map<uint32_t, file> files_map;
 
 enum class FinderWarning {path_limit, paths_noexists, open_noexists_path, open_noexists_file_name, no_warnings};
 
@@ -120,6 +137,8 @@ public:
 private:  
     fs::path base_path_;
     files_map files;
+    std::vector<fs::path> paths_;
+    std::vector<std::u16string> file_names_;
     //PathsMap files;
     std::vector<fs::path> not_used_paths_;
     std::vector<fs::path> not_existing_paths_;
