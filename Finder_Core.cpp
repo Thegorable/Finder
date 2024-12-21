@@ -91,12 +91,12 @@ file::operator std::string() const {
 
 
 Finder::Finder() : base_path_(fs::current_path()) {
-    files.reserve(4'000'000);
+    files_paths_id_.reserve(4'000'000);
     file_names_.reserve(4'000'000);
     paths_.reserve(1'500);
 }
 
-void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
+void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w, uint16_t path_id) {
 
     if (input_path.native().length() >= MAX_PATH) {
         w = FinderWarning::path_limit;
@@ -134,25 +134,28 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
 #ifndef _PROFILER
     for (const auto& dir : fs::directory_iterator(input_path)) {
         if (dir.is_directory()) {
-            paths_.push_back(dir.path().parent_path());
-            FindAllFilesViaPath(dir.path(), w);
+            paths_.push_back(dir.path());
+            FindAllFilesViaPath(dir.path(), w, paths_.size() - 1);
             continue;
         }
-        file_names_.push_back(dir.path().filename().u16string());
-        files.insert({ static_cast<uint16_t>(file_names_.size() - 1),
-        static_cast<uint16_t>(paths_.size() - 1) });
+        PushBackFileName(dir.path(), path_id);
     }
 #endif
 }
 
-void Finder::FindAllFilesViaPath(const fs::path& input_path) {
-    FinderWarning w(FinderWarning::no_warnings);
-    FindAllFilesViaPath(input_path, w);
+void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w) {
+    paths_.push_back(input_path);
+    FindAllFilesViaPath(input_path, w, 0);
 }
 
-format_file_map Finder::FindFilesBySubstring(const std::u16string& substring, size_t count) const {
+void Finder::FindAllFilesViaPath(const fs::path& input_path) {
+    FinderWarning w(FinderWarning::no_warnings);
+    paths_.push_back(input_path);
+    FindAllFilesViaPath(input_path, w, 0);
+}
+
+format_file_map Finder::FindFilesBySubstring(const std::u16string& substring, uint32_t count) const {
     format_file_map found_files;
-    //size_t id = 0;
     //for (const auto& f : files) {
     //    if (f.first.find(substring) != f.first.npos) {
     //        found_files[&f.first] = &f.second.path();
@@ -160,11 +163,18 @@ format_file_map Finder::FindFilesBySubstring(const std::u16string& substring, si
     //    }
     //    if (id >= count) { break; }
     //}
-    //return found_files;
+    for (uint32_t id = 0; id < static_cast<uint32_t>(file_names_.size()); id++) {
+        if (file_names_[id].find(substring) != file_names_[id].npos) {
+            found_files[&file_names_[id]] = &GetPathByFileId(id);
+        }
+        if (id >= count) { break; }
+    }
+
+    return found_files;
 }
 
 format_file_map Finder::FindFilesBySubstring(const std::u16string& substring) const {
-    return FindFilesBySubstring(substring, files.size());
+    return FindFilesBySubstring(substring, files_count());
 }
 
 u16string Finder::GetWarning(FinderWarning w) const {
@@ -220,8 +230,8 @@ void Finder::OpenDirectory(const fs::path& path, FinderWarning& w) const {
         bool result = ShellExecuteExW(&data);
         
         if (!result) {
-            throw runtime_error("The openning directory by path wasn't successfull."s
-                                "The error code "s + to_string(reinterpret_cast<intptr_t>(data.hInstApp)) );
+            throw runtime_error("The openning directory by path wasn't successfull. "s
+                                "Error code "s + to_string(reinterpret_cast<intptr_t>(data.hInstApp)) );
         }
         w = FinderWarning::no_warnings;
         
@@ -236,6 +246,12 @@ void Finder::OpenDirectoryViaFileName(const std::u16string& file_name, FinderWar
     //    OpenDirectory(files.at(file_name).parent_path(), w);
     //    return;
     //}
+    auto it = find(file_names_.begin(), file_names_.end(), file_name);
+    if (it != file_names_.end()) {
+        uint32_t id = distance(file_names_.begin(), it);
+        OpenDirectory(GetPathByFileId(id), w);
+        return;
+    }
 
     w = FinderWarning::open_noexists_file_name;
 }
@@ -245,13 +261,27 @@ void Finder::OpenDirectoryViaFileName(const std::u16string& file_name) const {
     OpenDirectoryViaFileName(file_name, w);
 }
 
-#ifdef _DEBUG
-bool Finder::isFileExist(std::u16string str_file) {
-    return files.count(str_file);
+//void Finder::PushBackFileName(const std::u16string& name) {
+//    file_names_.push_back(name);
+//    files_paths_id_.push_back(static_cast<uint16_t>(paths_.size() - 1));
+//}
+
+const fs::path& Finder::GetPathByFileId(uint32_t file_id) const {
+    return paths_[files_paths_id_[file_id]];
 }
-bool Finder::IsFilePath(std::u16string file_name, std::u16string file_full_path) {
-    file f = files.at(file_name);
-    return f.full_path_ == file_full_path;
+
+#ifdef _DEBUG
+bool Finder::isFileExist(const u16string& str_file) {
+    auto it = find(file_names_.begin(), file_names_.end(), str_file);
+    return it != file_names_.end();
+}
+bool Finder::IsFilePath(const u16string& file_name, const u16string& file_full_path) {
+    auto vec = find_all(file_names_.begin(), file_names_.end(), file_name);
+    for (auto& it : vec) {
+        uint16_t id = distance(file_names_.begin(), it);
+        if ((GetPathByFileId(id) / file_name) == file_full_path) { return true; }
+    }
+    return false;
 }
 #endif // _DEBUG
 

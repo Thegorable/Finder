@@ -153,7 +153,7 @@ void TestSimpleFindAllFilesViaPath() {
     Finder finder;
     finder.FindAllFilesViaPath(SIMPLE_TEST_PATH);
 
-    assert(finder.files.size() == 11);
+    assert(finder.files_count() == 11);
 
     assert(finder.isFileExist(u"root_file_1.txt"));
     assert(finder.IsFilePath(u"root_file_1.txt", 
@@ -178,7 +178,7 @@ void TestSimpleRusFindAllFilesViaPath() {
     Finder finder;
     finder.FindAllFilesViaPath(SIMPLE_TEST_RUS_PATH);
 
-    assert(finder.files.size() == 11);
+    assert(finder.files_count() == 11);
 
     assert(finder.isFileExist(u"корень_файл_1.txt"));
     assert(finder.IsFilePath(u"корень_файл_1.txt",
@@ -212,6 +212,9 @@ void TestSimpleRusFindAllFilesViaPath() {
 void TestHardFindAllFilesViaPath() {
     Finder finder;
     finder.FindAllFilesViaPath(HARD_TEST_PATH);
+
+    assert(finder.files_count() == 2317);
+    assert(finder.folders_count() == 2133);
 
     assert(finder.isFileExist(u"file_008_133.txt"));
     assert(finder.IsFilePath(u"file_008_133.txt",
@@ -388,8 +391,8 @@ void FindFilesViaConsoleTest(const fs::path current_path) {
         {return f.FindFilesBySubstring(str); };
     ui.SetRefresherFoundList(f_refresher);
     
-    opener_file<Finder> f_opener = [](const Finder& f, const u16string& str) 
-        { f.OpenDirectoryViaFileName(str); };
+    opener_file<Finder> f_opener = [](const Finder& f, const fs::path str)
+        { f.OpenDirectory(str); };
     ui.SetOpennerFile(f_opener);
 
     ui.run();

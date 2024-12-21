@@ -19,7 +19,7 @@ template <typename searcher>
 using refresher = std::function<format_file_map(const searcher& object, const std::u16string& str)>;
 
 template <typename searcher>
-using opener_file = std::function<void(const searcher& object, const std::u16string& str)>;
+using opener_file = std::function<void(const searcher& object, const fs::path& str)>;
 
 const WCHAR ESC = 27;
 const WCHAR ENTER = 13;
@@ -39,7 +39,8 @@ public:
     void SetOpennerFile(opener_file<searcher> func);
     void PrintU16InConsole(const WCHAR* c, DWORD len = 1);
     void PrintU16InConsole(const std::u16string& w_str);
-    void PrintU16InConsole(const fs::path& path);
+    void PrintFoundPAthInCounsole(const std::u16string& file_name, const std::u16string& path);
+    void PrintFoundPAthInCounsole(const std::u16string& file_name, const fs::path& path);
 
 private:
     void Key(INPUT_RECORD& input_event, DWORD& read_num);
@@ -187,7 +188,7 @@ inline void ConsoleSearcherUI<searcher>::Key(INPUT_RECORD& input_event, DWORD& r
             if (!on_input_line_) {
                 UpdateScreenBuffer();
                 auto it = next(found_list_.begin(), buffer_.dwCursorPosition.Y - FOUND_LIST_Y_POS_);
-                open_file_(searcher_object_, *it->first);
+                open_file_(searcher_object_, *it->second);
                 StopRunning();
             }
             break;
@@ -418,16 +419,22 @@ inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const WCHAR* in_char,
 
 template <typename searcher>
 inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const std::u16string& u16str) {
-    PrintU16InConsole(reinterpret_cast<const WCHAR*> (u16str.c_str()), static_cast<DWORD>(u16str.size()));
+    PrintU16InConsole(reinterpret_cast<const WCHAR*> (u16str.c_str()), 
+        static_cast<DWORD>(u16str.size()));
 }
 
 template<typename searcher>
-inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const fs::path& path) {
-    PrintU16InConsole(path.filename().u16string());
+inline void ConsoleSearcherUI<searcher>::PrintFoundPAthInCounsole(const std::u16string& file_name, 
+    const std::u16string& path) {
+    PrintU16InConsole(file_name);
     PrintU16InConsole(std::u16string(u"\t\t:\t\t..."));
-    std::wstring last_str = path.wstring();
-    size_t file_name_size = path.filename().wstring().size();
-    PrintU16InConsole(last_str.c_str() + last_str.size() - 60 - file_name_size - 1, 60);
+    PrintU16InConsole(reinterpret_cast<const WCHAR*>(path.c_str()) + path.size() - 60, 60);
+}
+
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::PrintFoundPAthInCounsole(const std::u16string& file_name, 
+    const fs::path& path) {
+    PrintFoundPAthInCounsole(file_name, path.u16string());
 }
 
 template <typename searcher>
@@ -472,7 +479,7 @@ inline void ConsoleSearcherUI<searcher>::ReprintFoundList() {
     
     for (const auto& path_str : found_list_) {
         SetCursorYPosition(FOUND_LIST_Y_POS_ + (raw++));
-        PrintU16InConsole(*path_str.second);
+        PrintFoundPAthInCounsole(*path_str.first, *path_str.second);
         num++;
         if (num >= max_found_list_size_) {
             break;

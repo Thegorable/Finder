@@ -23,6 +23,22 @@ wchar_t* GetNativePathFileWStr(const fs::path& path);
 char16_t* GetNativePathFileU16Str(const fs::path& path);
 const char16_t* GetNativeDirsToFileU16Str(const fs::path& path);
 
+template<typename it, typename value>
+std::vector<it> find_all(it l, it r, value v) {
+    std::vector<it> vec;
+
+    while (l != r) {
+        l = std::find(l, r, v);
+        if (l == r) {
+            break;
+        }
+        vec.push_back(l);
+        l++;
+    }
+
+    return vec;
+}
+
 //struct file {
 //    file(const fs::path& path);
 //    file(const std::u16string& path);
@@ -125,9 +141,10 @@ public:
 
     void FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w);
     void FindAllFilesViaPath(const fs::path& input_path);
-    format_file_map FindFilesBySubstring(const std::u16string& str, size_t count) const;
+    format_file_map FindFilesBySubstring(const std::u16string& str, uint32_t count) const;
     format_file_map FindFilesBySubstring(const std::u16string& str) const;
-    inline size_t files_count() const noexcept { return files.size(); }
+    inline size_t files_count() const noexcept { return file_names_.size(); }
+    inline size_t folders_count() const noexcept { return paths_.size(); }
     std::u16string GetWarning(FinderWarning w) const;
     void OpenDirectory(const fs::path& path) const;
     void OpenDirectory(const fs::path& path, FinderWarning& w) const;
@@ -135,10 +152,23 @@ public:
     void OpenDirectoryViaFileName(const std::u16string& file_name) const;
 
 private:  
+    void FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w, uint16_t path_id);
+    inline void PushBackFileName(const std::u16string& name, uint16_t path_id) {
+        file_names_.push_back(name);
+        files_paths_id_.push_back(static_cast<uint16_t>(path_id));
+    }
+    inline void PushBackFileName(const fs::path& full_path, uint16_t path_id) {
+        file_names_.push_back(full_path.filename().u16string());
+        files_paths_id_.push_back(static_cast<uint16_t>(path_id));
+    }
+
+    const fs::path& GetPathByFileId(uint32_t file_id) const;
+    
     fs::path base_path_;
     files_map files;
     std::vector<fs::path> paths_;
     std::vector<std::u16string> file_names_;
+    std::vector<uint32_t> files_paths_id_;
     //PathsMap files;
     std::vector<fs::path> not_used_paths_;
     std::vector<fs::path> not_existing_paths_;
@@ -153,8 +183,8 @@ public:
     size_t total_inserted_files_weight = 0;
     size_t total_paths_weight = 0;
 
-    bool isFileExist(std::u16string str_file);
-    bool IsFilePath(std::u16string file_name, std::u16string file_full_path);
+    bool isFileExist(const std::u16string& str_file);
+    bool IsFilePath(const std::u16string& file_name, const std::u16string& file_full_path);
 
     friend void TestSimpleFindAllFilesViaPath();
     friend void TestHardFindAllFilesViaPath();

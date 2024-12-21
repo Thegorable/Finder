@@ -19,8 +19,8 @@ void RunFinder() {
         {return f.FindFilesBySubstring(str, 30); };
     ui.SetRefresherFoundList(f_refresher);
 
-    opener_file<Finder> f_opener = [](const Finder& f, const u16string& str)
-        { f.OpenDirectoryViaFileName(str); };
+    opener_file<Finder> f_opener = [](const Finder& f, const fs::path& path)
+        { f.OpenDirectory(path); };
     ui.SetOpennerFile(f_opener);
 
     ui.run();
@@ -30,8 +30,6 @@ int main() {
     try {
 
 #ifdef _DEBUG
-        //TestPathsMapInsert();
-        //TestPathsMapAt();
         //TestSimpleFindAllFilesViaPath();
         //TestHardFindAllFilesViaPath();
         //TestSimpleRusFindAllFilesViaPath();
@@ -48,13 +46,13 @@ int main() {
 #endif
 
 #ifndef _DEBUG
-        //RunFinder();
+        RunFinder();
 #ifdef _PROFILE
-        Finder finder;
-        Profiler profiler;
-        finder.FindAllFilesViaPath(BENCHMARK_TEST_PATH_MAX);
-        profiler.PrintResults<std::chrono::milliseconds>("BENCHMARK test FindAllFilesViaPath: ");
-        system("pause");
+        //Finder finder;
+        //Profiler profiler;
+        //finder.FindAllFilesViaPath(BENCHMARK_TEST_PATH_MAX);
+        //profiler.PrintResults<std::chrono::milliseconds>("BENCHMARK test FindAllFilesViaPath: ");
+        //system("pause");
 #endif // _PROFILE
 
 #endif // !_DEBUG
