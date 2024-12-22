@@ -9,7 +9,8 @@
 #include"Time.h"
 #include"array_ptr.h"
 
-#define _PROFILE
+//#define _PROFILE
+#define _DEBUG_INFO
 
 namespace fs = std::filesystem;
 
@@ -39,20 +40,6 @@ std::vector<it> find_all(it l, it r, value v) {
     return vec;
 }
 
-//struct file {
-//    file(const fs::path& path);
-//    file(const std::u16string& path);
-//    file(const std::wstring& path);
-//    file(const char16_t* path);
-//    file(const wchar_t* path);
-//
-//    fs::path parent_path() const;
-//    operator std::u16string() const;
-//    operator std::string() const;
-//
-//    const fs::path full_path_;
-//};
-
 struct file {
     file(const fs::path& path);
     file(const std::u16string& path);
@@ -71,69 +58,9 @@ private:
 };
 
 typedef std::map<const std::u16string*, const fs::path*> format_file_map;
-//typedef std::unordered_map<std::u16string, file> files_map;
 typedef std::unordered_map<uint32_t, file> files_map;
 
 enum class FinderWarning {path_limit, paths_noexists, open_noexists_path, open_noexists_file_name, no_warnings};
-
-class PathsMap {
-public:
-    class Iterator {
-        friend class PathsMap;
-
-    public:
-        using difference_type = std::ptrdiff_t;
-        using value_type = std::u16string;
-        using pointer = const std::u16string*;
-        using reference = const std::u16string&;
-        using iterator_category = std::random_access_iterator_tag;
-
-        Iterator(std::vector<const std::u16string*>::iterator it);
-        Iterator(std::vector<const std::u16string*>::const_iterator it);
-        Iterator(const std::u16string* raw_ptr);
-        Iterator operator++();
-        Iterator operator++(int);
-        Iterator operator--();
-        Iterator operator--(int);
-        //Iterator operator+(const Iterator& other) const;
-        //Iterator operator-(const Iterator& other) const;
-        bool operator==(Iterator other) const;
-        bool operator!=(Iterator other) const;
-        reference operator*() const;
-
-    private:
-        pointer vec_it_;
-    };
-    
-    PathsMap();
-
-    void insert(const fs::path& path);
-    void insert(const fs::path& path, int8_t path_len);
-    fs::path at(const std::u16string& key) const;
-    void SetBasePath(const fs::path& path);
-    inline size_t size() const noexcept { return id_set_.size(); }
-    size_t count(const std::u16string str) const;
-    
-    Iterator begin();
-    Iterator begin() const;
-    const Iterator cbegin() const;
-    Iterator end();
-    Iterator end() const;
-    const Iterator cend() const;
-
-private:
-    fs::path base_path_;
-    std::vector<const std::u16string*> names_;
-    std::unordered_map <std::u16string, int32_t> name_ids_;
-    std::unordered_map <std::u16string_view, ArrayPtr<int32_t> > id_set_;
-
-    int32_t last_id_ = 0;
-
-#ifdef _DEBUG
-    friend void TestPathsMapInsert();
-#endif // _DEBUG
-
-};
 
 class Finder {
 public:
@@ -141,7 +68,7 @@ public:
 
     void FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w);
     void FindAllFilesViaPath(const fs::path& input_path);
-    format_file_map FindFilesBySubstring(const std::u16string& str, uint32_t count) const;
+    format_file_map FindFilesBySubstring(const std::u16string& str, size_t count) const;
     format_file_map FindFilesBySubstring(const std::u16string& str) const;
     inline size_t files_count() const noexcept { return file_names_.size(); }
     inline size_t folders_count() const noexcept { return paths_.size(); }
@@ -169,7 +96,6 @@ private:
     std::vector<fs::path> paths_;
     std::vector<std::u16string> file_names_;
     std::vector<uint32_t> files_paths_id_;
-    //PathsMap files;
     std::vector<fs::path> not_used_paths_;
     std::vector<fs::path> not_existing_paths_;
 
@@ -182,7 +108,10 @@ public:
     size_t total_files_weight = 0;
     size_t total_inserted_files_weight = 0;
     size_t total_paths_weight = 0;
+#endif
 
+#ifdef _DEBUG
+public:
     bool isFileExist(const std::u16string& str_file);
     bool IsFilePath(const std::u16string& file_name, const std::u16string& file_full_path);
 
@@ -192,5 +121,3 @@ public:
     friend void TestDataSize(fs::path path);
 #endif
 };
-
-void FindFilesViaConsoleTest(const fs::path current_path = CURRENT_PATH);

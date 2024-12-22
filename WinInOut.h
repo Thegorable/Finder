@@ -1,5 +1,6 @@
 ﻿#pragma once
 #define NOMINMAX
+#define _DEBUG_INFO
 #include<iostream>
 #include<cassert>
 #include<string>
@@ -37,10 +38,18 @@ public:
     void run();
     void SetRefresherFoundList(refresher<searcher> ref_func);
     void SetOpennerFile(opener_file<searcher> func);
-    void PrintU16InConsole(const WCHAR* c, DWORD len = 1);
-    void PrintU16InConsole(const std::u16string& w_str);
+    void SetCurrentPath(const std::u16string& path);
+    void SetCurrentPath(const fs::path& path);
+    void PrintInConsole(const std::wstring& path, bool insert = true);
+    void PrintInConsole(const WCHAR* c, DWORD len = 1, bool insert = true);
+    void PrintInConsole(const std::u16string& w_str, bool insert = true);
     void PrintFoundPAthInCounsole(const std::u16string& file_name, const std::u16string& path);
     void PrintFoundPAthInCounsole(const std::u16string& file_name, const fs::path& path);
+#ifdef _DEBUG_INFO
+    void PrintProfiling(short line);
+    void PrintProfilingOnce(short line);
+    void StopPrintProfiling();
+#endif
 
 private:
     void Key(INPUT_RECORD& input_event, DWORD& read_num);
@@ -65,6 +74,7 @@ private:
     std::u16string start_instructions = u"Enter file name:";
     std::u16string found_list_label = u"Matched files";
     std::u16string no_found_list_label = u"No Matched Files";
+    std::u16string base_path_ = u"Current path: ";
     
     const HANDLE H_CONSOLE_IN;
     const HANDLE H_CONSOLE_OUT;
@@ -88,6 +98,10 @@ private:
     const searcher& searcher_object_;
     refresher<searcher> refresh_found_files_f_;
     opener_file<searcher> open_file_;
+
+#ifdef _DEBUG_INFO
+    bool isPrintingProfile = true;
+#endif
 };
 
 template <typename searcher>
@@ -145,9 +159,11 @@ ConsoleSearcherUI<searcher>::ConsoleSearcherUI(const searcher& object, Language 
     }
 
     SetCursorYPosition(0);
-    PrintU16InConsole(start_instructions);
+    PrintInConsole(start_instructions);
+    SetCursorYPosition(1);
+    PrintInConsole(base_path_);
     SetCursorYPosition(FOUND_LIST_LABEL_Y_POS_);
-    PrintU16InConsole(found_list_label);
+    PrintInConsole(found_list_label);
     ReprintFoundList();
 }
 
@@ -175,6 +191,18 @@ inline void ConsoleSearcherUI<searcher>::SetRefresherFoundList(refresher<searche
 template<typename searcher>
 inline void ConsoleSearcherUI<searcher>::SetOpennerFile(opener_file<searcher> func) {
     open_file_ = func;
+}
+
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::SetCurrentPath(const std::u16string& path) {
+    base_path_ += path;
+    SetCursorYPosition(1);
+    PrintInConsole(base_path_);
+}
+
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::SetCurrentPath(const fs::path& path) {
+    SetCurrentPath(path.u16string());
 }
 
 template <typename searcher>
@@ -230,7 +258,7 @@ inline void ConsoleSearcherUI<searcher>::Key(INPUT_RECORD& input_event, DWORD& r
 
         default:
             if (on_input_line_) {
-                PrintU16InConsole(&input_event.Event.KeyEvent.uChar.UnicodeChar);
+                PrintInConsole(&input_event.Event.KeyEvent.uChar.UnicodeChar);
                 size_input_line_++;
                 UpdateFoundListFromCurrentConsoleLine();
             }
@@ -394,8 +422,11 @@ inline void ConsoleSearcherUI<searcher>::HighLightCurrentLine(SHORT x_len) {
 }
 
 template <typename searcher>
-inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const WCHAR* in_char, DWORD len) {
+inline void ConsoleSearcherUI<searcher>::PrintInConsole(const WCHAR* in_char, 
+    DWORD len, 
+    bool insert) {
     DWORD num_printed = 0;
+    
     switch (*in_char) {
 
     case BACK_SPACE: ESC: NOTHING:
@@ -410,25 +441,33 @@ inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const WCHAR* in_char,
     }
 
     default:
-        printf("\x1b[1@");
+        insert ? printf("\x1b[1@") : 0;
         bool result = WriteConsole(H_CONSOLE_OUT, in_char, len, &num_printed, NULL);
         assert(result);
     }
 
 }
 
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::PrintInConsole(const std::wstring& path, 
+    bool insert) {
+    PrintInConsole(path.c_str(), path.size(), insert);
+}
+
 template <typename searcher>
-inline void ConsoleSearcherUI<searcher>::PrintU16InConsole(const std::u16string& u16str) {
-    PrintU16InConsole(reinterpret_cast<const WCHAR*> (u16str.c_str()), 
-        static_cast<DWORD>(u16str.size()));
+inline void ConsoleSearcherUI<searcher>::PrintInConsole(const std::u16string& u16str,
+    bool insert) {
+    PrintInConsole(reinterpret_cast<const WCHAR*> (u16str.c_str()), 
+        static_cast<DWORD>(u16str.size()), 
+        insert);
 }
 
 template<typename searcher>
 inline void ConsoleSearcherUI<searcher>::PrintFoundPAthInCounsole(const std::u16string& file_name, 
     const std::u16string& path) {
-    PrintU16InConsole(file_name);
-    PrintU16InConsole(std::u16string(u"\t\t:\t\t..."));
-    PrintU16InConsole(reinterpret_cast<const WCHAR*>(path.c_str()) + path.size() - 60, 60);
+    PrintInConsole(file_name);
+    PrintInConsole(std::u16string(u"\t\t:\t\t..."));
+    PrintInConsole(reinterpret_cast<const WCHAR*>(path.c_str()) + path.size() - 60, 60);
 }
 
 template<typename searcher>
@@ -436,6 +475,46 @@ inline void ConsoleSearcherUI<searcher>::PrintFoundPAthInCounsole(const std::u16
     const fs::path& path) {
     PrintFoundPAthInCounsole(file_name, path.u16string());
 }
+
+#ifdef _DEBUG_INFO
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::PrintProfiling(short line) {
+    MaxFPS restricter(20);
+    Profiler profiler;
+    auto prev_cursor_pose = buffer_.dwCursorPosition;
+    //UpdateScreenBuffer();
+
+    while (isPrintingProfile)
+    {
+        restricter.StartFunction();
+
+        SetCursorXYPosition(0, line);
+        std::cout << "Found files: " << searcher_object_.files_count() << '\n';
+        std::cout << "Found folders: " << searcher_object_.folders_count() << '\n';
+        profiler.PrintResults<std::chrono::milliseconds>(std::string("Time: "), false);
+        
+        long long stopWatch = profiler.GetDuration<std::chrono::milliseconds>();
+        long long speed_read = searcher_object_.files_count();
+        if (stopWatch > 0) {
+            speed_read = (speed_read / stopWatch) * 1000;
+        }
+        std::cout << "Speed reading files: " << speed_read << " Files/sec" << '\n';
+        SetCursorXYPosition(prev_cursor_pose.X, prev_cursor_pose.Y);
+
+        restricter.EndFunction();
+    };
+   
+}
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::PrintProfilingOnce(short line) {
+    isPrintingProfile = false;
+    PrintProfiling(line);
+}
+template<typename searcher>
+inline void ConsoleSearcherUI<searcher>::StopPrintProfiling() {
+    isPrintingProfile = false;
+};
+#endif
 
 template <typename searcher>
 inline void ConsoleSearcherUI<searcher>::ReadCurrentConsoleLine(std::u16string& str) {
@@ -471,7 +550,7 @@ inline void ConsoleSearcherUI<searcher>::ReprintFoundList() {
     
     if (found_list_.empty()) {
         SetCursorYPosition(FOUND_LIST_Y_POS_);
-        PrintU16InConsole(no_found_list_label);   
+        PrintInConsole(no_found_list_label);
         SetCursorXYPosition(prev_cursor_pos.X, prev_cursor_pos.Y);
         found_list_on_screen_count_ = 0;
         return;

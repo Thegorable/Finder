@@ -16,6 +16,9 @@ const fs::path COPY_TEST_PATH = MAIN_TEST_PATH / "findCopyFiles_test"_p;
 const fs::path BENCHMARK_TEST_PATH_LOW = MAIN_TEST_PATH / "findFiles_Benchmark_test_low"_p;
 const fs::path BENCHMARK_TEST_PATH_MID = MAIN_TEST_PATH / "findFiles_Benchmark_test_mid"_p;
 const fs::path BENCHMARK_TEST_PATH_MAX = MAIN_TEST_PATH / "findFiles_Benchmark_test_max"_p;
+const fs::path REAL_PATH_CICADA = R"(E:\Cicada Adventure\Assets_export)"_p;
+const fs::path REAL_PATH_FORT_MID = R"(D:\DEV_FN_33\Engine\Binaries)"_p;
+const fs::path REAL_PATH_FORT_MAX = R"(D:\DEV_FN_33)"_p;
 
 long long countDigits(long long number);
 std::string GenerateRandomNumberStr(int length);
@@ -41,6 +44,8 @@ void TestFindFilesBySubstring();
 void TestFindRusFilesBySubstring();
 void TestOpenDirectory();
 void TestOpenDirectoryViaFileName();
+
+void FindFilesViaConsoleTest(const fs::path& current_path = CURRENT_PATH);
 
 void TestPathsMapInsert();
 void TestPathsMapAt();

@@ -27,9 +27,12 @@ public:
     void Pause();
     void Continue();
 
-protected:
+    template <class TimeType>
+    uint64_t GetDuration();
+
+protected:  
     std::chrono::nanoseconds GetStopWatch();
-    
+
     std::chrono::nanoseconds stopwatch_dur{};
     std::chrono::time_point<std::chrono::steady_clock, std::chrono::nanoseconds> start_time_point = std::chrono::steady_clock::now();
 };
@@ -42,23 +45,25 @@ std::ostream& operator << (std::ostream& os, std::chrono::seconds);
 class Profiler : public StopWatch {
 public:
     template <class TimeType>
-    inline void PrintResults();
+    inline void PrintResults(bool restart = true);
     template <class TimeType>
-    inline void PrintResults(std::string m);
+    inline void PrintResults(std::string m, bool restart = true);
 };
 
 template<class TimeType>
-inline void Profiler::PrintResults() {
+inline void Profiler::PrintResults(bool restart) {
     stopwatch_dur += GetStopWatch();
     start_time_point = std::chrono::steady_clock::now();
     std::cerr << duration_cast<TimeType>(std::chrono::nanoseconds(stopwatch_dur)) << " " << '\n';
-    Restart();
+    if (restart) {
+        Restart();
+    }
 }
 
 template<class TimeType>
-inline void Profiler::PrintResults(std::string m) {
+inline void Profiler::PrintResults(std::string m, bool restart) {
     std::cerr << m;
-    PrintResults<TimeType>();
+    PrintResults<TimeType>(restart);
 }
 
 
@@ -73,3 +78,27 @@ public:
 private:
     std::chrono::nanoseconds max_fps_;
 };
+
+template<class TimeType>
+inline uint64_t StopWatch::GetDuration() {
+    stopwatch_dur += GetStopWatch();
+    return stopwatch_dur.count();
+}
+
+template<>
+inline uint64_t StopWatch::GetDuration<std::chrono::milliseconds>() {
+    stopwatch_dur += GetStopWatch();
+    return duration_cast<std::chrono::milliseconds>(stopwatch_dur).count();
+}
+
+template<>
+inline uint64_t StopWatch::GetDuration<std::chrono::microseconds>() {
+    stopwatch_dur += GetStopWatch();
+    return duration_cast<std::chrono::microseconds>(stopwatch_dur).count();
+}
+
+template<>
+inline uint64_t StopWatch::GetDuration<std::chrono::seconds>() {
+    stopwatch_dur += GetStopWatch();
+    return duration_cast<std::chrono::seconds>(stopwatch_dur).count();
+}

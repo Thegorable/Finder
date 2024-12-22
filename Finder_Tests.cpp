@@ -303,97 +303,22 @@ void TestOpenDirectoryViaFileName() {
     cerr << "TestOpenDirectoryViaFileName was succsessull.\n";
 }
 
-void TestPathsMapInsert() {
-        PathsMap paths;
-        paths.SetBasePath(R"(E:\Programming\Training_projects\C++\Finder)");
-        paths.insert(R"(E:\Programming\Training_projects\C++\Finder\)"
-                    R"(findFiles_Benchmark_test_max\folder_04051_3\folder_15327_1)"
-                    R"(\folder_23717_4\folder_14306_2)");
-
-        assert(paths.name_ids_.count(u"findFiles_Benchmark_test_max"));
-        assert(paths.name_ids_.at(u"findFiles_Benchmark_test_max") == 0);
-        assert(paths.name_ids_.count(u"folder_23717_4"));
-        assert(paths.name_ids_.at(u"folder_23717_4") == 3);
-        assert(paths.name_ids_.count(u"folder_14306_2"));
-        assert(paths.name_ids_.at(u"folder_14306_2") == 4);
-
-        assert(paths.id_set_.count(u"folder_14306_2"));
-        assert(paths.id_set_.at(u"folder_14306_2")[0] == 0);
-        assert(paths.id_set_.at(u"folder_14306_2")[1] == 1);
-        assert(paths.id_set_.at(u"folder_14306_2")[2] == 2);
-        assert(paths.id_set_.at(u"folder_14306_2")[3] == 3);
-        assert(paths.id_set_.at(u"folder_14306_2")[4] == 4);
-
-        assert(*paths.names_[0] == u"findFiles_Benchmark_test_max");
-        assert(*paths.names_[2] == u"folder_15327_1");
-        assert(*paths.names_[4] == u"folder_14306_2");
-
-        paths.insert(R"(E:\Programming\Training_projects\C++\Finder\)"
-            R"(findFiles_Benchmark_test_max\folder_04051_3\folder_15327_1)"
-            R"(\folder_24507_1\folder_06572_3\folder_13201_2)");
-
-        assert(paths.name_ids_.count(u"findFiles_Benchmark_test_max"));
-        assert(paths.name_ids_.at(u"findFiles_Benchmark_test_max") == 0);
-        assert(paths.name_ids_.count(u"folder_14306_2"));
-        assert(paths.name_ids_.at(u"folder_14306_2") == 4);
-        
-        assert(paths.name_ids_.count(u"folder_24507_1"));
-        assert(paths.name_ids_.at(u"folder_24507_1") == 5);
-        assert(paths.name_ids_.count(u"folder_13201_2"));
-        assert(paths.name_ids_.at(u"folder_13201_2") == 7);
-
-        assert(paths.id_set_.count(u"folder_13201_2"));
-        assert(paths.id_set_.at(u"folder_13201_2")[0] == 0);
-        assert(paths.id_set_.at(u"folder_13201_2")[1] == 1);
-        assert(paths.id_set_.at(u"folder_13201_2")[2] == 2);
-        assert(paths.id_set_.at(u"folder_13201_2")[3] == 5);
-        assert(paths.id_set_.at(u"folder_13201_2")[4] == 6);
-        assert(paths.id_set_.at(u"folder_13201_2")[5] == 7);
-
-        assert(*paths.names_[0] == u"findFiles_Benchmark_test_max");
-        assert(*paths.names_[2] == u"folder_15327_1");
-        assert(*paths.names_[4] == u"folder_14306_2");
-        assert(*paths.names_[5] == u"folder_24507_1");
-        assert(*paths.names_[6] == u"folder_06572_3");
-        assert(*paths.names_[7] == u"folder_13201_2");
-
-        cout << "TestPathsMapInsert is Done!\n";
-}
-
-void TestPathsMapAt() {
-    PathsMap paths;
-    paths.SetBasePath(R"(E:\Programming\Training_projects\C++\Finder)");
-    fs::path test_path = R"(E:\Programming\Training_projects\C++\Finder)"
-        R"(\findFiles_Benchmark_test_max\folder_04051_3\folder_15327_1)"
-        R"(\folder_23717_4\folder_14306_2)";
-    
-    paths.insert(test_path);
-    assert(paths.at(u"folder_14306_2") == test_path);
-
-    fs::path test_path_2 = R"(E:\Programming\Training_projects\C++\Finder)"
-        R"(\findFiles_Benchmark_test_max\folder_04051_3\folder_15327_1)"
-        R"(\folder_47377_2\folder_80546_3\file_00004_9741.txt)";
-
-    paths.insert(test_path_2);
-    assert(paths.at(u"file_00004_9741.txt") == test_path_2);
-
-    cout << "TestPathsMapAt is Done!\n";
-}
-
-void FindFilesViaConsoleTest(const fs::path current_path) {
+void FindFilesViaConsoleTest(const fs::path& current_path) {
     Finder finder;
     FinderWarning w = FinderWarning::no_warnings;
     finder.FindAllFilesViaPath(current_path, w);
 
     ConsoleSearcherUI<Finder> ui(finder, Language::RU);
     
-    refresher<Finder> f_refresher = [](const Finder& f, const u16string& str) 
-        {return f.FindFilesBySubstring(str); };
+    refresher<Finder> f_refresher = [](const Finder& f, const u16string& str)
+        {return f.FindFilesBySubstring(str, 30); };
     ui.SetRefresherFoundList(f_refresher);
     
     opener_file<Finder> f_opener = [](const Finder& f, const fs::path str)
         { f.OpenDirectory(str); };
     ui.SetOpennerFile(f_opener);
+
+    ui.SetCurrentPath(current_path);
 
     ui.run();
 }

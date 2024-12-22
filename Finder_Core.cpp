@@ -110,27 +110,6 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path, FinderWarning& w, u
         return;
     }
 
-#ifdef _PROFILER
-    for (const auto& dir : fs::directory_iterator(input_path)) {
-        if (dir.is_directory()) {
-            FindAllFilesViaPath(dir.path(), w);
-            dir_count++;
-            total_dir_str_weight += MeasurePathMemory(dir.path().filename());
-        }
-        else {
-            files.insert({ dir.path().filename().u16string(),  dir.path() });
-            total_files_weight += MeasurePathMemory(dir.path().filename());
-            total_paths_weight += MeasurePathMemory(dir.path());
-        }
-    }
-#endif
-//#ifndef _PROFILER
-//    for (const auto& dir : fs::directory_iterator(input_path)) {
-//        dir.is_directory() ? FindAllFilesViaPath(dir.path(), w) : 
-//            (void)files.insert({ dir.path().filename().u16string(), 50u});
-//    }
-//#endif
-
 #ifndef _PROFILER
     for (const auto& dir : fs::directory_iterator(input_path)) {
         if (dir.is_directory()) {
@@ -154,20 +133,16 @@ void Finder::FindAllFilesViaPath(const fs::path& input_path) {
     FindAllFilesViaPath(input_path, w, 0);
 }
 
-format_file_map Finder::FindFilesBySubstring(const std::u16string& substring, uint32_t count) const {
+format_file_map Finder::FindFilesBySubstring(const std::u16string& substring, size_t count) const {
     format_file_map found_files;
-    //for (const auto& f : files) {
-    //    if (f.first.find(substring) != f.first.npos) {
-    //        found_files[&f.first] = &f.second.path();
-    //        id++;
-    //    }
-    //    if (id >= count) { break; }
-    //}
-    for (uint32_t id = 0; id < static_cast<uint32_t>(file_names_.size()); id++) {
+
+    uint32_t found_count = 0;
+    for (size_t id = 0; id < file_names_.size(); id++) {
         if (file_names_[id].find(substring) != file_names_[id].npos) {
             found_files[&file_names_[id]] = &GetPathByFileId(id);
+            found_count++;
         }
-        if (id >= count) { break; }
+        if (found_count >= count) { break; }
     }
 
     return found_files;
@@ -242,10 +217,6 @@ void Finder::OpenDirectory(const fs::path& path, FinderWarning& w) const {
 }
 
 void Finder::OpenDirectoryViaFileName(const std::u16string& file_name, FinderWarning& w) const {
-    //if (files.count(file_name)) {
-    //    OpenDirectory(files.at(file_name).parent_path(), w);
-    //    return;
-    //}
     auto it = find(file_names_.begin(), file_names_.end(), file_name);
     if (it != file_names_.end()) {
         uint32_t id = distance(file_names_.begin(), it);
@@ -260,11 +231,6 @@ void Finder::OpenDirectoryViaFileName(const std::u16string& file_name) const {
     FinderWarning w = FinderWarning::no_warnings;
     OpenDirectoryViaFileName(file_name, w);
 }
-
-//void Finder::PushBackFileName(const std::u16string& name) {
-//    file_names_.push_back(name);
-//    files_paths_id_.push_back(static_cast<uint16_t>(paths_.size() - 1));
-//}
 
 const fs::path& Finder::GetPathByFileId(uint32_t file_id) const {
     return paths_[files_paths_id_[file_id]];
@@ -284,106 +250,3 @@ bool Finder::IsFilePath(const u16string& file_name, const u16string& file_full_p
     return false;
 }
 #endif // _DEBUG
-
-PathsMap::PathsMap() : base_path_(CURRENT_PATH) {
-    name_ids_.reserve(500'000);
-    id_set_.reserve(500'000);
-}
-
-void PathsMap::insert(const fs::path& path) {
-    insert(path, distance(path.begin(), path.end()));
-}
-
-void PathsMap::insert(const fs::path& path, int8_t path_len) {
-    ArrayPtr<int32_t> path_ids(path_len);
-
-    short i = 0;
-    int32_t last_used_id = 0;
-    for (const auto& name : path) {
-        if (!name_ids_.count(name.u16string())) {
-            auto it = name_ids_.insert({ name.u16string(), last_id_ });
-            names_.push_back(&it.first->first);
-            last_used_id = last_id_++;
-            path_ids[i++] = last_used_id;
-            continue;
-        }
-        last_used_id = name_ids_.at(name.u16string());
-        path_ids[i++] = last_used_id;
-    }
-
-    id_set_[*names_.at(last_used_id)] = move(path_ids);
-}
-
-fs::path PathsMap::at(const std::u16string& key) const {
-    const ArrayPtr<int32_t>& ids_set = id_set_.at(key);
-    fs::path result_path = base_path_;
-    for (uint8_t i = 0; i < ids_set.size(); i++) {
-        result_path /= fs::path(*names_.at(ids_set[i]));
-    }
-
-    return result_path;
-}
-
-void PathsMap::SetBasePath(const fs::path& path) {
-    base_path_ = path;
-}
-
-size_t PathsMap::count(const std::u16string str) const {
-    return id_set_.count(str);
-}
-
-PathsMap::Iterator PathsMap::begin() {
-    return Iterator(names_.begin());
-}
-
-PathsMap::Iterator PathsMap::begin() const {
-    return Iterator(names_.begin());
-}
-
-const PathsMap::Iterator PathsMap::cbegin() const {
-    return Iterator(names_.cbegin());
-}
-
-PathsMap::Iterator PathsMap::end() {
-    return Iterator(names_.end());
-}
-
-PathsMap::Iterator PathsMap::end() const {
-    return Iterator(names_.end());
-}
-
-const PathsMap::Iterator PathsMap::cend() const {
-    return Iterator(names_.cend());
-}
-
-PathsMap::Iterator::Iterator(std::vector<const std::u16string*>::iterator it) : vec_it_(*it) {}
-
-PathsMap::Iterator::Iterator(std::vector<const std::u16string*>::const_iterator it) : vec_it_(*it) {}
-
-PathsMap::Iterator::Iterator(const std::u16string* raw_ptr) : vec_it_(raw_ptr) {}
-
-PathsMap::Iterator PathsMap::Iterator::operator++() { vec_it_++; return *this; }
-
-PathsMap::Iterator PathsMap::Iterator::operator++(int) { 
-    Iterator temp = *this; vec_it_++; return temp; 
-}
-
-PathsMap::Iterator PathsMap::Iterator::operator--() { vec_it_--; return *this; }
-
-PathsMap::Iterator PathsMap::Iterator::operator--(int) { 
-    Iterator temp = *this; vec_it_--; return temp; 
-}
-
-//PathsMap::Iterator PathsMap::Iterator::operator+(const Iterator& other) const {
-//    Iterator temp(vec_it_ + other.vec_it_); return temp; 
-//}
-//
-//PathsMap::Iterator PathsMap::Iterator::operator-(const Iterator& other) const {
-//    Iterator temp(vec_it_ - other.vec_it_); return temp;
-//}
-
-bool PathsMap::Iterator::operator==(Iterator other) const { return vec_it_ == other.vec_it_; }
-
-bool PathsMap::Iterator::operator!=(Iterator other) const { return !(*this == other); }
-
-PathsMap::Iterator::reference PathsMap::Iterator::operator*() const { return *vec_it_; }

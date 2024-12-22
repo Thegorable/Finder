@@ -8,12 +8,18 @@ using namespace std;
 using namespace std::chrono_literals;
 #include"Finder_Tests.h"
 
-void RunFinder() {
+void RunFinder(const fs::path& cur_path = fs::current_path()) {
     Finder finder;
-    FinderWarning w = FinderWarning::no_warnings;
-    finder.FindAllFilesViaPath(fs::current_path(), w);
-
     ConsoleSearcherUI<Finder> ui(finder, Language::RU);
+    
+    auto data_profiler = [&ui]() { ui.PrintProfiling(25);};
+    thread profiler_thread(data_profiler);
+    
+    FinderWarning w = FinderWarning::no_warnings;
+    finder.FindAllFilesViaPath(cur_path, w);
+    ui.StopPrintProfiling();
+    profiler_thread.join();
+    //ui.PrintProfilingOnce(27);
 
     refresher<Finder> f_refresher = [](const Finder& f, const u16string& str)
         {return f.FindFilesBySubstring(str, 30); };
@@ -22,6 +28,8 @@ void RunFinder() {
     opener_file<Finder> f_opener = [](const Finder& f, const fs::path& path)
         { f.OpenDirectory(path); };
     ui.SetOpennerFile(f_opener);
+
+    ui.SetCurrentPath(cur_path);
 
     ui.run();
 }
@@ -39,7 +47,7 @@ int main() {
 
         //Profile_FindAllFilesViaPath(BENCHMARK_TEST_PATH_LOW);
         
-        //FindFilesViaConsoleTest(HARD_TEST_PATH);
+        RunFinder(BENCHMARK_TEST_PATH_MID);
         //TestOpenDirectory();
         //TestOpenDirectoryViaFileName();
 
